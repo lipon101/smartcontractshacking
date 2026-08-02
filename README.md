@@ -1,4 +1,4 @@
-# smartcontractshacking — Solodit Smart-Contract Audit Corpus
+# Smart-Contract Audit Corpus
 
 **52,697 real audit findings** downloaded from the official Cyfrin Solodit Findings API
 (byte-exact, no summaries, no cutoffs) + **Kaggle-ready train/eval splits** (zero leakage)
