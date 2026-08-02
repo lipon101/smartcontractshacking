@@ -1,2 +1,1 @@
-# smartcontractshacking
-Smart Contract Hacking and Auditing
+# Smart Contract Hacking and Auditing
