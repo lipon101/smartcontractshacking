@@ -224,8 +224,12 @@ def main():
     # 5) write outputs ------------------------------------------------------
     sort_keys = {"yes": True, "no": False}.get(args.sort_keys)
     if sort_keys is None:
-        # auto-detect from the shipped eval_source.jsonl (single file, no parts)
-        shipped = open(os.path.join(ROOT, "splits", "eval_source.jsonl"), "rb").read()
+        # auto-detect from the shipped eval_source.jsonl (single file OR byte-split parts)
+        ev_parts = sorted(glob.glob(os.path.join(ROOT, "splits", "eval_source.jsonl.part*")))
+        if ev_parts:
+            shipped = b"".join(open(f, "rb").read() for f in ev_parts)
+        else:
+            shipped = open(os.path.join(ROOT, "splits", "eval_source.jsonl"), "rb").read()
         probe = eval_[0] if eval_ else {}
         sort_keys = dump_row(probe, True).encode() in shipped or not dump_row(probe, False).encode() in shipped
         print(f"[5] json.dumps sort_keys auto-detected = {sort_keys}")
