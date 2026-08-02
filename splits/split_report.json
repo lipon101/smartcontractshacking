@@ -1,0 +1,49 @@
+{
+  "corpus_total": 52697,
+  "after_dedup": 51823,
+  "dedup_removed": 874,
+  "train_count": 46633,
+  "eval_count": 5190,
+  "eval_ratio": 0.1001,
+  "train_protocols": 2545,
+  "eval_protocols": 405,
+  "corpus_severity": {
+    "LOW": 26079,
+    "MEDIUM": 14097,
+    "GAS": 3505,
+    "HIGH": 8142
+  },
+  "train_severity": {
+    "GAS": 3296,
+    "LOW": 23911,
+    "MEDIUM": 12257,
+    "HIGH": 7169
+  },
+  "eval_severity": {
+    "HIGH": 973,
+    "LOW": 2168,
+    "MEDIUM": 1840,
+    "GAS": 209
+  },
+  "leakage": {
+    "id_overlap": 0,
+    "protocol_overlap": 0
+  },
+  "eval_protocols_sample": [
+    "Phi",
+    "Pearlabs",
+    "Etherspot Credibleaccountmodule",
+    "BOB-Staking_2025-10-18",
+    "Stackingsalmon",
+    "Basis",
+    "Etherspot Gastankpaymastermodule Extended",
+    "Term Structure",
+    "Exactly Protocol",
+    "Futaba",
+    "Perennial V2 Update #1",
+    "Fenix Finance",
+    "Blueberry_2025-03-12",
+    "Perpetual",
+    "Exactly Protocol Update - Stacking Contract"
+  ]
+}

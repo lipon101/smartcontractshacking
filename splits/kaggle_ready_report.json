@@ -1,0 +1,24 @@
+{
+  "corpus_total": 52697,
+  "after_dedup": 51823,
+  "train_count": 46633,
+  "eval_count": 5190,
+  "train_with_source": 7340,
+  "eval_with_source": 655,
+  "c4_joined_total": 12460,
+  "c4_with_source": 8003,
+  "train_severity": {
+    "GAS": 3296,
+    "LOW": 23911,
+    "MEDIUM": 12257,
+    "HIGH": 7169
+  },
+  "eval_severity": {
+    "HIGH": 973,
+    "LOW": 2168,
+    "MEDIUM": 1840,
+    "GAS": 209
+  },
+  "leakage": "0 id overlap / 0 protocol overlap (protocol-exclusive split)",
+  "next": "Sherlock repo join to fill more sources; then Kaggle training (QLoRA on samscrack/Qwen3.6-Solidity-27B)"
+}
