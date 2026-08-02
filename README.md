@@ -101,11 +101,32 @@ The pipeline consumes the [Cyfrin Solodit audit checklist](https://solodit.cyfri
 1. **Corpus tagging** — `scripts/checklist_map.py` maps every corpus record onto the 11 captured checklist
    categories via regex patterns over `vuln_type` + `audit_text` (transparently reassembling the byte-split
    `.partNN` layout, like the notebook loader). Coverage stats, per-category pattern lists, and example
-   findings are in `docs/checklist_vuln_type_map.json`: **19,589 / 46,633 train records (42.0%) match ≥1
-   category** (DoS 8.8%, Donation 4.3%, Price Manipulation ~9%, Front-running, Reentrancy, ...). Matching is
-   keyword-heuristic — treat tags as weak supervision, refine the patterns in `scripts/checklist_map.py`
-   (`CHECKLIST_PATTERNS`, the single source of truth; the notebook embeds a copy at build time).
+   findings are in `docs/checklist_vuln_type_map.json`: **11,823 / 46,633 train records (25.35%) match ≥1 category**.
+   Matching is two-tier keyword-heuristic (weak supervision; refined by a 40/60/100-row precision audit):
+   `CHECKLIST_PATTERNS` on `vuln_type` (6,176 rows, ~90% judged-correct) + strict `CHECKLIST_AUDIT_PATTERNS`
+   phrases on `audit_text` (5,647 rows, ~25% judged-correct — audit narratives discuss attack classes
+   generically). Per-category patterns + example findings: see the map JSON. Refine patterns in
+   `scripts/checklist_map.py` (single source of truth; the notebook embeds both tiers at build time).
 2. **Prompt context** — `kaggle_finetune.ipynb` embeds the checklist items + patterns (self-contained for
    Kaggle, no extra files to upload) and injects the matched items into the user prompt as a
    `Reference checklist:` block (`CHECKLIST_CONTEXT = True` in the config cell; up to 2 categories × 2 items).
    Train and eval prompts are built by the same `build_messages()` — no train/eval prompt skew.
+
+## Train/eval split + Code4rena source join (reproducible)
+
+`scripts/build_splits.py` rebuilds the Kaggle-ready splits from scratch:
+
+1. **Load** `corpus/train_starter.jsonl.part*` (52,697 parsed findings, training schema).
+2. **Dedupe by `audit_text`** (keep first) → 51,823 records — exactly the published `after_dedup`.
+3. **Split (protocol-exclusive)** — default mode VERIFIES the shipped canonical partition
+   (`splits/train.jsonl.part*` + `splits/eval.jsonl`: id-set equality with the deduped corpus,
+   counts 46,633/5,190, protocols 2,545/405) and reuses it, so the emitted files are
+   **byte-identical** to the shipped ones (validated: sha256 `a8fea891…` / `312c1493…`,
+   4-part layout identical). `--rebuild-split` builds a fresh deterministic split instead.
+4. **Code4rena source join** — fills `source` + `c4_repo` from `splits/c4_joined.jsonl.part*` by
+   `id` (8,003 rows carry real audited contract code → train 7,340 / eval 655 filled; nothing
+   else is overwritten).
+5. **Leakage proof** (asserted + written to `splits/split_report.json`): id overlap 0,
+   protocol overlap 0, (contract_name, protocol) overlap 0, source-content (sha256) overlap 0.
+
+Usage: `python3 scripts/build_splits.py [--rebuild-split] [--out DIR]`

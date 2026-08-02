@@ -4,8 +4,15 @@
 Single source of truth for the category -> regex-pattern mapping used by:
   - docs/checklist_vuln_type_map.json   (coverage stats, --corpus mode)
   - kaggle_finetune.ipynb               (prompt-context injection; the notebook
-                                         embeds a copy of CHECKLIST_PATTERNS at
+                                         embeds copies of both pattern tiers at
                                          build time so it stays self-contained)
+
+Two tiers (refined by two precision audits; audit_text-only matching was noisy,
+e.g. "donat" / "signature" / "callback" / "predictable" substring hits, so the
+audit tier now contains only strict phrases):
+
+  CHECKLIST_PATTERNS       -> matched against vuln_type (broad, high signal)
+  CHECKLIST_AUDIT_PATTERNS -> matched against audit_text (strict phrases only)
 
 Usage:
   python3 scripts/checklist_map.py --corpus splits/train_source.jsonl --out docs/checklist_vuln_type_map.json
@@ -29,34 +36,35 @@ CHECKLIST_PATTERNS = {
         r"unbounded loop", r"gas limit",
     ],
     "Donation Attack": [
-        r"(?s)donat\\w*.{0,30}(attack|inflate|manipulat|tokens?|funds?|balance|pool|price|account)",
+        r"donation attack", r"donat\w* (tokens?|funds?)", r"first depositor",
         r"balanceof", r"internal accounting",
     ],
     "Front-running Attack": [
-        r"front[- ]?run", r"mempool", r"commit[- ]?reveal", r"get[- ]?or[- ]?create",
-        r"preempt", r"two[- ]transaction",
+        r"front[- ]?run", r"frontrun", r"mempool", r"commit[- ]?reveal",
+        r"get[- ]?or[- ]?create", r"preempt", r"two[- ]transaction",
     ],
     "Griefing Attack": [
-        r"grief", r"gas limit", r"force (a )?(revert|failure)", r"prevent (the )?(withdrawal|repayment)",
+        r"grief", r"force (a )?(revert|failure)", r"prevent (the )?(withdrawal|repayment)",
+        r"spam",
     ],
     "Miner Attack": [
         r"block\.timestamp", r"\btimestamp", r"block\.number", r"randomness",
-        r"\bminer", r"transaction order", r"tx order", r"predictable",
+        r"\bminer", r"transaction order", r"tx order", r"\bpredictable",
     ],
     "Price Manipulation Attack": [
         r"\bprice", r"\boracle", r"\btwap", r"flash[- ]?loan", r"spot price",
         r"liquidity pool", r"ratio of token balances", r"manipulat",
     ],
     "Reentrancy Attack": [
-        r"reentran", r"callback", r"check[- ]?effects[- ]?interactions",
-        r"state change after interaction", r"read[- ]?only reentran",
+        r"reentran", r"read[- ]?only reentran", r"check[- ]?effects[- ]?interactions",
+        r"state change after interaction",
     ],
     "Replay Attack": [
-        r"replay", r"\bnonce", r"chainid", r"chain id", r"eip-712", r"signature",
+        r"replay", r"\bnonce", r"chainid", r"chain id", r"eip-712", r"signature replay",
     ],
     "Rug Pull": [
         r"rug", r"pull (all |the )?(assets|funds|tokens)", r"admin.*(pull|withdraw|steal)",
-        r"owner.*(pull|withdraw|steal)", r"pull assets",
+        r"owner.*(pull|withdraw|steal)", r"pull assets", r"no (way|functionality) to withdraw",
     ],
     "Sandwich Attack": [
         r"sandwich", r"slippage", r"min(imum)? (output|amount)", r"minout", r"min out",
@@ -66,20 +74,66 @@ CHECKLIST_PATTERNS = {
     ],
 }
 
-_COMPILED = {
-    cat: [re.compile(p, re.IGNORECASE) for p in pats]
-    for cat, pats in CHECKLIST_PATTERNS.items()
+CHECKLIST_AUDIT_PATTERNS = {
+    "Denial-Of-Service (DoS) Attack": [
+        r"denial of service", r"out of gas", r"unbounded loop",
+        r"withdrawal pattern", r"pull[- ]?based", r"low decimal",
+        r"blacklist", r"grief",
+    ],
+    "Donation Attack": [
+        r"donation attack", r"internal accounting",
+    ],
+    "Front-running Attack": [
+        r"front[- ]?run", r"frontrun", r"commit[- ]?reveal", r"mempool", r"preempt",
+    ],
+    "Griefing Attack": [
+        r"grief",
+    ],
+    "Miner Attack": [
+        r"block\.timestamp", r"block\.number", r"randomness",
+    ],
+    "Price Manipulation Attack": [
+        r"price manipulation", r"oracle manipulation", r"oracle price",
+        r"flash[- ]?loan", r"\btwap", r"spot price",
+    ],
+    "Reentrancy Attack": [
+        r"reentran", r"read[- ]?only reentran", r"check[- ]?effects[- ]?interactions",
+    ],
+    "Replay Attack": [
+        r"signature replay", r"replay attack", r"nonce reuse", r"chainid", r"eip-712",
+    ],
+    "Rug Pull": [
+        r"rug pull", r"admin (can )?(pull|withdraw|steal)",
+    ],
+    "Sandwich Attack": [
+        r"sandwich", r"slippage", r"min(imum)? (output|amount)",
+    ],
+    "Sybil Attack": [
+        r"sybil", r"quorum",
+    ],
 }
 
+_VT = {cat: [re.compile(p, re.IGNORECASE) for p in pats] for cat, pats in CHECKLIST_PATTERNS.items()}
+_AT = {cat: [re.compile(p, re.IGNORECASE) for p in pats] for cat, pats in CHECKLIST_AUDIT_PATTERNS.items()}
 
-def match_categories(*texts):
-    """Return checklist categories whose patterns hit any of the given texts."""
+
+def match_categories(vuln_type, audit_text=""):
+    """Checklist categories whose vuln_type pattern or strict audit phrase hits."""
     hits = []
-    for cat, res in _COMPILED.items():
+    for cat, res in _VT.items():
         for rx in res:
-            if any(rx.search(t) for t in texts if t):
+            if rx.search(vuln_type or ""):
                 hits.append(cat)
                 break
+    if audit_text:
+        at = audit_text[:2000]
+        for cat, res in _AT.items():
+            if cat in hits:
+                continue
+            for rx in res:
+                if rx.search(at):
+                    hits.append(cat)
+                    break
     return hits
 
 
@@ -118,6 +172,8 @@ def main():
     rows = load_jsonl(args.corpus, args.limit)
     n = len(rows)
     per_cat = Counter()
+    vt_hits = Counter()          # matched on vuln_type alone
+    at_only_hits = Counter()     # matched only via the strict audit tier
     examples = {c: [] for c in CHECKLIST_PATTERNS}
     matched_records = 0
     unmatched = []
@@ -128,8 +184,13 @@ def main():
         cats = match_categories(vt, at)
         if cats:
             matched_records += 1
+            vt_cats = [c for c in cats if any(rx.search(vt) for rx in _VT[c])]
             for c in cats:
                 per_cat[c] += 1
+                if c in vt_cats:
+                    vt_hits[c] += 1
+                else:
+                    at_only_hits[c] += 1
                 if len(examples[c]) < 12 and vt.strip():
                     examples[c].append(vt.strip()[:160])
         elif len(unmatched) < 20:
@@ -140,11 +201,16 @@ def main():
         "records": n,
         "matched_records": matched_records,
         "matched_pct": round(100.0 * matched_records / n, 2),
+        "note": "Two-tier matching: CHECKLIST_PATTERNS on vuln_type + strict "
+                "CHECKLIST_AUDIT_PATTERNS on audit_text (keyword-heuristic; weak supervision).",
         "categories": {
             c: {
                 "patterns": CHECKLIST_PATTERNS[c],
+                "audit_patterns": CHECKLIST_AUDIT_PATTERNS[c],
                 "records": per_cat[c],
                 "pct_of_corpus": round(100.0 * per_cat[c] / n, 2),
+                "via_vuln_type": vt_hits[c],
+                "via_audit_only": at_only_hits[c],
                 "example_vuln_types": examples[c],
             }
             for c in CHECKLIST_PATTERNS
