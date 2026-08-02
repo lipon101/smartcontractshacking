@@ -41,7 +41,7 @@ SYSTEM_PROMPT = (
     "You are a professional smart-contract security auditor for bug bounties (Immunefi). "
     "Given a Solidity contract and a function, find the vulnerability, prove it with a "
     "concrete exploit PoC, and give the exact fix. Output ONLY strict JSON:\n"
-    '{"vulnerable": true/false, "vuln_type": "...", "severity": "critical|high|medium|low", '
+    '{"vulnerable": true/false, "vuln_type": "...", "severity": "critical|high|medium|low|gas", '
     '"poc": "<step-by-step exploit sequence>", "fix": "<what the fix is and why>", '
     '"patched_function": "<the FULL replacement function including its signature, '
     'or null if not vulnerable>"}'

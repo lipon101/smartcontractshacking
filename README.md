@@ -56,7 +56,7 @@ cat archives/solodit_ALL.zip.part* > archives/solodit_ALL.zip
 ## Notes
 - The Solodit API key used for the crawl is NOT in this repo — generate your own at solodit.cyfrin.io.
 - Findings are public audit reports (Code4rena / Sherlock / Cyfrin / audit firms). Keep derived work private if you redistribute.
-- Next: Sherlock join (3,034 findings), then QLoRA fine-tune of Qwen3.6-27B on train_source.jsonl.
+- Next: Sherlock join (3,034 findings), then the Kaggle fine-tune notebook (`kaggle_finetune.ipynb`, QLoRA on `train_source.jsonl`, strict-JSON answers).
 
 ## SHA256 (originals — verify after reassembly)
 ```
@@ -74,3 +74,21 @@ ed0ec3440a603f6516a629dde12643d1370573186d2370e2b509ad7649e8e13f  solodit_ALL.zi
 126a53f1dca6da5471f5468ca688bf1f981ff5734e2f74c522a6b1cd281494f7  sample_review.md
 e94d92593c0c972915990030a7b98a5b9f5e853b642936bafad40bdd7bb219e4  state.json
 ```
+
+## Kaggle fine-tune
+
+`kaggle_finetune.ipynb` — one-click QLoRA training notebook that consumes **`splits/train_source.jsonl` directly**
+(including the byte-split `.partNN` layout; it verifies the published SHA256) and formats every record into the
+**strict-JSON answer contract** defined by `scripts/eval_harness.py` (SYSTEM_PROMPT + `extract_json`):
+
+```json
+{"vulnerable": true/false, "vuln_type": "...", "severity": "critical|high|medium|low|gas",
+ "poc": "...", "fix": "...", "patched_function": "..." or null}
+```
+
+- Upload the `splits/` files as a Kaggle dataset, attach it to a GPU T4 notebook, **Run All**.
+- Default base `Qwen/Qwen3.5-9B` (T4 16 GB); 27B variants (`Qwen/Qwen3.6-27B`,
+  `samscrack/Qwen3.6-Solidity-27B`, `crichalchemist/Qwen3.6-Solidity-27B`) need ≥24 GB VRAM.
+- Validation uses the provided protocol-exclusive `eval_source.jsonl` (never a random re-split).
+- Severity is normalized corpus → contract: `LOW|MEDIUM|HIGH|GAS` → `low|medium|high|gas` (harness enum extended to match).
+- Known gaps: no negative examples, `poc`/`fix` empty on ~80% of rows, `patched_function` not trainable (fixes are prose).
