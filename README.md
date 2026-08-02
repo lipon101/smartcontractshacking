@@ -92,3 +92,20 @@ e94d92593c0c972915990030a7b98a5b9f5e853b642936bafad40bdd7bb219e4  state.json
 - Validation uses the provided protocol-exclusive `eval_source.jsonl` (never a random re-split).
 - Severity is normalized corpus → contract: `LOW|MEDIUM|HIGH|GAS` → `low|medium|high|gas` (harness enum extended to match).
 - Known gaps: no negative examples, `poc`/`fix` empty on ~80% of rows, `patched_function` not trainable (fixes are prose).
+
+## Findings Checklist wiring
+
+The pipeline consumes the [Cyfrin Solodit audit checklist](https://solodit.cyfrin.io/checklist)
+(`docs/findings-checklist.md` human-readable, `docs/findings_checklist.json` machine-readable) in two ways:
+
+1. **Corpus tagging** — `scripts/checklist_map.py` maps every corpus record onto the 11 captured checklist
+   categories via regex patterns over `vuln_type` + `audit_text` (transparently reassembling the byte-split
+   `.partNN` layout, like the notebook loader). Coverage stats, per-category pattern lists, and example
+   findings are in `docs/checklist_vuln_type_map.json`: **19,589 / 46,633 train records (42.0%) match ≥1
+   category** (DoS 8.8%, Donation 4.3%, Price Manipulation ~9%, Front-running, Reentrancy, ...). Matching is
+   keyword-heuristic — treat tags as weak supervision, refine the patterns in `scripts/checklist_map.py`
+   (`CHECKLIST_PATTERNS`, the single source of truth; the notebook embeds a copy at build time).
+2. **Prompt context** — `kaggle_finetune.ipynb` embeds the checklist items + patterns (self-contained for
+   Kaggle, no extra files to upload) and injects the matched items into the user prompt as a
+   `Reference checklist:` block (`CHECKLIST_CONTEXT = True` in the config cell; up to 2 categories × 2 items).
+   Train and eval prompts are built by the same `build_messages()` — no train/eval prompt skew.

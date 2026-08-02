@@ -1,0 +1,318 @@
+{
+  "corpus": "splits/train_source.jsonl",
+  "records": 46633,
+  "matched_records": 19589,
+  "matched_pct": 42.01,
+  "categories": {
+    "Denial-Of-Service (DoS) Attack": {
+      "patterns": [
+        "\\bdos\\b",
+        "denial of service",
+        "denial-of-service",
+        "withdraw(al)? pattern",
+        "pull[- ]?based",
+        "\\bdust",
+        "queue",
+        "low decimal",
+        "blacklist",
+        "grief",
+        "out of gas",
+        "block gas",
+        "unbounded loop",
+        "gas limit"
+      ],
+      "records": 4090,
+      "pct_of_corpus": 8.77,
+      "example_vuln_types": [
+        "`AutoRange` execution can be front-ran to avoid protocol fee, causing loss for protocol",
+        "Due to interest rates update method, Interest-Free Loans are possible and the costs of DoS are reduced",
+        "Protocol can be repeatedly gas griefed in `AutoRange` external call",
+        "Function may run out of gas",
+        "`fillAsk()` Allows for `msg.value` to be larger than require locking the excess in the contract",
+        "`GolomTrader`: `validateOrder` function does not check if ecrecover return value is 0",
+        "Griefer can minimize delegatee's voting power",
+        "`SwapOperation` First LP pays no fee and can set the price to an incorrect value, causing losses to traders, and higher fees",
+        "Redemptions that redeem close to 100% of the Trove Debt may revert when the hint is inaccurate",
+        "`StakingOperation` will drip rewards to no-one if rewards are queued before any deposit",
+        "`massUpdatePools` needs to be capped due to OOG reverts",
+        "Pull Based Oracle may allow for profitable self-liquidations"
+      ]
+    },
+    "Donation Attack": {
+      "patterns": [
+        "(?s)donat\\\\w*.{0,30}(attack|inflate|manipulat|tokens?|funds?|balance|pool|price|account)",
+        "balanceof",
+        "internal accounting"
+      ],
+      "records": 2005,
+      "pct_of_corpus": 4.3,
+      "example_vuln_types": [
+        "No need to cache a function call if used only once",
+        "Users can lend and borrow above allowed limitations",
+        "`V3Utils.execute()` does not have caller validation, leading to stolen NFT positions from users",
+        "Invalid/extraneous/optional function definitions in interface",
+        "`require()`/`revert()` strings longer than 32 bytes cost extra gas",
+        "Unchecked arithmetic",
+        "`internal` and `private` functions only called once can be inlined to save gas",
+        "The result of external function calls should be cached rather than re-calling the function",
+        "Griefer can minimize delegatee's voting power",
+        "When `MIN_VOTING_POWER_REQUIRED` is changed, previous votes are not affected",
+        "`VoteEscrowDelegation._writeCheckpoint` fails when `nCheckpoints` is 0",
+        "`StakingOperation` will drip rewards to no-one if rewards are queued before any deposit"
+      ]
+    },
+    "Front-running Attack": {
+      "patterns": [
+        "front[- ]?run",
+        "mempool",
+        "commit[- ]?reveal",
+        "get[- ]?or[- ]?create",
+        "preempt",
+        "two[- ]transaction"
+      ],
+      "records": 1729,
+      "pct_of_corpus": 3.71,
+      "example_vuln_types": [
+        "[06] `RouterSwapParams` lacks a deadlining logic and could lead to unfavourable swaps",
+        "`AutoRange` execution can be front-ran to avoid protocol fee, causing loss for protocol",
+        "Repayments and liquidations can be forced to revert by an attacker that repays minuscule amount of shares",
+        "Due to interest rates update method, Interest-Free Loans are possible and the costs of DoS are reduced",
+        "`ERC20.Permit` can be front-runned and should be try/catched",
+        "`SwapOperations` `swapFee` is non deterministic and can cause people to lose funds",
+        "Risks with transaction reordering",
+        "Initialization functions can be front-run",
+        "Front-Running",
+        "M-9: defaulting doesn't change the state of the loan",
+        "M-7: Bid submission vulnerable to market parameters changes",
+        "M-6: LenderCommitmentForwarder#updateCommitment can be front-run by malicious borrower to cause lender to over-commit funds"
+      ]
+    },
+    "Griefing Attack": {
+      "patterns": [
+        "grief",
+        "gas limit",
+        "force (a )?(revert|failure)",
+        "prevent (the )?(withdrawal|repayment)"
+      ],
+      "records": 960,
+      "pct_of_corpus": 2.06,
+      "example_vuln_types": [
+        "Protocol can be repeatedly gas griefed in `AutoRange` external call",
+        "`fillAsk()` Allows for `msg.value` to be larger than require locking the excess in the contract",
+        "`GolomTrader`: `validateOrder` function does not check if ecrecover return value is 0",
+        "Griefer can minimize delegatee's voting power",
+        "`SwapOperation` First LP pays no fee and can set the price to an incorrect value, causing losses to traders, and higher fees",
+        "Redemptions that redeem close to 100% of the Trove Debt may revert when the hint is inaccurate",
+        "`massUpdatePools` needs to be capped due to OOG reverts",
+        "Risks with transaction reordering",
+        "Borrower can reduce lender accruals",
+        "Lenders’ unborrowed deposits can be locked up by a borrower",
+        "M-13: A borrower/lender or liquidator will fail to withdraw the collateral assets due to reaching a gas limit",
+        "Griefing attack on claimable rewards"
+      ]
+    },
+    "Miner Attack": {
+      "patterns": [
+        "block\\.timestamp",
+        "\\btimestamp",
+        "block\\.number",
+        "randomness",
+        "\\bminer",
+        "transaction order",
+        "tx order",
+        "predictable"
+      ],
+      "records": 3659,
+      "pct_of_corpus": 7.85,
+      "example_vuln_types": [
+        "Cache calculations instead of re-calculating. Saves 3 checked subtractions.",
+        "State variable can be packed into fewer storage slots by truncating timestamp",
+        "Dangerous use of deadline parameter",
+        "Repayments and liquidations can be forced to revert by an attacker that repays minuscule amount of shares",
+        "`setReserveFactor` fails to update global interest before updating reserve factor",
+        "Due to interest rates update method, Interest-Free Loans are possible and the costs of DoS are reduced",
+        "Duplicated `require()`/`revert()` checks should be refactored to a modifier or function",
+        "Inconsistent spacing in comments",
+        "Missing event and or timelock for critical parameter change",
+        "`require()` should be used instead of `assert()`",
+        "`last_point` value rewritten right after initialization",
+        "State variables with values known at compile time should be constants"
+      ]
+    },
+    "Price Manipulation Attack": {
+      "patterns": [
+        "\\bprice",
+        "\\boracle",
+        "\\btwap",
+        "flash[- ]?loan",
+        "spot price",
+        "liquidity pool",
+        "ratio of token balances",
+        "manipulat"
+      ],
+      "records": 6987,
+      "pct_of_corpus": 14.98,
+      "example_vuln_types": [
+        "Make `calculation` constant instead of calculating every time on function call",
+        "Pack the struct variables into fewer storage slots by re-ordering the variables",
+        "Improper return of `chainlinkReferencePriceX96` in V3Oracle.`_getReferenceTokenPriceX96()`",
+        "[06] `RouterSwapParams` lacks a deadlining logic and could lead to unfavourable swaps",
+        "[05] No grace period applied which would then allow positions to be liquidated after sequencer goes down since now users don't have enough time to deposit funds",
+        "[04] The logic behind `MIN_PRICE_DIFFERENCE` is heavily flawed as it allows for heavy arbitraging",
+        "[03] Introduce better naming conventions",
+        "Asymmetric calculation of price difference",
+        "`V3Oracle` susceptible to price manipulation",
+        "Users cannot stop loss in AutoRange and AutoExit",
+        "Lack of safety buffer in `_checkLoanIsHealthy` could subject users who take out the max loan into a forced liquidation",
+        "Large decimal of `referenceToken` causes overflow at oracle price calculation"
+      ]
+    },
+    "Reentrancy Attack": {
+      "patterns": [
+        "reentran",
+        "callback",
+        "check[- ]?effects[- ]?interactions",
+        "state change after interaction",
+        "read[- ]?only reentran"
+      ],
+      "records": 2527,
+      "pct_of_corpus": 5.42,
+      "example_vuln_types": [
+        "Users's tokens stuck in `AutoCompound` after Vault is deactivated",
+        "Protocol can be repeatedly gas griefed in `AutoRange` external call",
+        "Owner of a position can prevent liquidation due to the `onERC721Received` callback",
+        "Risk of reentrancy `onERC721Received` function to manipulate collateral token configs shares",
+        "`public` functions not called by the contract should be declared `external` instead",
+        "NatSpec is incomplete",
+        "Don't use `payable.transfer()`/`payable.send()`",
+        "Using `bool`s for storage incurs overhead",
+        "`public` functions to `external`",
+        "Analysis - Some thoughts, consideration and advice for next steps",
+        "Basic Style Guide advice",
+        "Read-only reentrancy in `redeemNFT` / `withdraw` flow"
+      ]
+    },
+    "Replay Attack": {
+      "patterns": [
+        "replay",
+        "\\bnonce",
+        "chainid",
+        "chain id",
+        "eip-712",
+        "signature"
+      ],
+      "records": 3176,
+      "pct_of_corpus": 6.81,
+      "example_vuln_types": [
+        "`V3Vault.sol` permit signature does not check receiving token address is USDC",
+        "Event is missing `indexed` fields",
+        "Lines are too long",
+        "Non-assembly method available",
+        "Contract implements interface without extending the interface",
+        "`ecrecover()` signature validity not checked",
+        "Consider addings checks for signature malleability",
+        "Typos",
+        "Vulnerable to cross-chain replay attacks due to static `DOMAIN_SEPARATOR`/`domainSeparator`",
+        "Remove unreachable code",
+        "Use custom errors rather than `revert()`/`require()` strings to save gas",
+        "Unchecked arithmetic"
+      ]
+    },
+    "Rug Pull": {
+      "patterns": [
+        "rug",
+        "pull (all |the )?(assets|funds|tokens)",
+        "admin.*(pull|withdraw|steal)",
+        "owner.*(pull|withdraw|steal)",
+        "pull assets"
+      ],
+      "records": 936,
+      "pct_of_corpus": 2.01,
+      "example_vuln_types": [
+        "Users's tokens stuck in `AutoCompound` after Vault is deactivated",
+        "`DailyLendIncreaseLimitLeft` and `dailyDebtIncreaseLimitLeft` are not adjusted accurately",
+        "`GolomTrader`: `validateOrder` function does not check if ecrecover return value is 0",
+        "Front-Running",
+        "Excessive privileges of admin over staked tokens",
+        "Anyone can call repayLoan on the borrower and pull funds from their account to repay loan",
+        "New 0x transformers are allowed by default, which could lead to unexpected problems",
+        "Reentrancy in withdrawExcessCollateral() and withdrawExcessPayment() functions.",
+        "`Factory.create`: Predictability of pool address creates multiple issues.",
+        "Factory.create: Predictability of pool address creates multiple issues.",
+        "PrivatePool owner can steal all ERC20 and NFT from user via arbitrary execution",
+        "Should an airdrop token arrive on the `pair.sol` contract, it will be stuck"
+      ]
+    },
+    "Sandwich Attack": {
+      "patterns": [
+        "sandwich",
+        "slippage",
+        "min(imum)? (output|amount)",
+        "minout",
+        "min out"
+      ],
+      "records": 1288,
+      "pct_of_corpus": 2.76,
+      "example_vuln_types": [
+        "Struct can be packed into fewer storage slot by truncating time",
+        "[06] `RouterSwapParams` lacks a deadlining logic and could lead to unfavourable swaps",
+        "Donation on Pairs, in conjunction with lax slippage could be used to take on unintended ratios of debt",
+        "`SwapOperations.addLiquidity` is not validating desired and min amounts",
+        "Operative Risks tied to changing Risk Based Parameter",
+        "M-7: Bid submission vulnerable to market parameters changes",
+        "Hardcoded pool coin indices risk wrong swaps/reverts",
+        "Missing slippage protection in redeem function",
+        "Missing slippage protection in redeem function",
+        "Missing slippage protection on sellCredits()",
+        "Many 0x transformations ignore outputToken, returning unaccounted for tokens to account and risking liquidations",
+        "Oracle update front-running allows extraction of value from vaults"
+      ]
+    },
+    "Sybil Attack": {
+      "patterns": [
+        "sybil",
+        "quorum",
+        "number of users",
+        "unique users"
+      ],
+      "records": 290,
+      "pct_of_corpus": 0.62,
+      "example_vuln_types": [
+        "Delegated NFTs that are withdrawn while still delegated will remain delegated even after burn",
+        "Rounding down when computing fees beneﬁts users",
+        "Duplicate receivers allowed by addReceiver()",
+        "Referral system can be attacked via the sybil attack",
+        "No quorum requirements for transmit() function",
+        "The voting thresholds in Ajna's Extraordinary Funding Mechanism can be manipulated to execute proposals below the expected threshold",
+        "[10] Hardcoded block numbers will lead to unsuccessful off-boarding",
+        "[08] Setters should check if set the same value",
+        "[03] `MinBorrow` must be based on the market token",
+        "`RateLimitedMinter` isn't used by `SimplePSM` resulting in Governance attacks",
+        "Inability to offboard term twice in a 7-day period may lead to bad debt to the market",
+        "Incorrect initialization of `SecurityCouncilMemberRemovalGovernor` contract"
+      ]
+    }
+  },
+  "unmatched_examples": [
+    "Switch the order around `&&` to use `shortcircuit` to save gas (Instances missed by bot)",
+    "`Check` before updating `bool` with same value",
+    "Use direct global `msg.sender` instead of taking it as function parameter",
+    "Cache state variable outside of the else block to save 1 sload",
+    "Refactor `configToken` function to fail early and `saves 1 external call` on failing",
+    "Refactor `borrow` function to avoid 1 sload",
+    "State variables can be packed into fewer storage slots by reducing their sizes (*Instances missed by bot*)",
+    "[02] Setters should always have equality checkers",
+    "[01] `_checkApprovals` should be reimplemented to count for the allowance depleting",
+    "Incorrect liquidation fee calculation during underwater liquidation, disincentivizing liquidators to participate",
+    "`dailyDebtIncreaseLimitLeft` is not updated in `liquidate()`",
+    "Tokens can't be removed as a collateral without breaking liquidations and other core functions",
+    "`AutoExit` could receive a reward calculated from the entire position's fund even if `onlyFee` is true in `AutoExit.execute()`",
+    "Users' newly created positions can be prematurely closed and removed from the vault directly after they are created",
+    "`V3Vault` is not ERC-4626 compliant",
+    "User might execute `PositionToken` of token set by previous token owner",
+    "Wrong global lending limit check in `_deposit` function",
+    "Liquidation reward sent to msg.sender instead of recipient",
+    "No `minLoanSize` means liquidators will have no incentive to liquidate small positions",
+    "An attacker can easily bypass the collateral value limit factor checks"
+  ]
+}
