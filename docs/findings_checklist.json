@@ -1,0 +1,310 @@
+{
+  "title": "Blockchain Security Audit Checklist",
+  "source": {
+    "name": "Cyfrin Solodit — Blockchain Security Audit Checklist",
+    "url": "https://solodit.cyfrin.io/checklist",
+    "github": "https://github.com/Cyfrin/audit-checklist"
+  },
+  "export_note": "Partial export of the interactive checklist page (captured 2026-08-03). The live checklist tracks 370 items; this capture contains the 25 items whose Description/Remediation/References were visible. Reference numbers (#1, #2, ...) are placeholders preserved verbatim from the source page. Section headers that were visible without captured items are listed as empty sections — no content is fabricated for them.",
+  "items_captured": 25,
+  "empty_sections_seen": [
+    "Attacker's Mindset",
+    "Basics",
+    "Centralization Risk",
+    "Defi",
+    "External Call",
+    "Hash / Merkle Tree",
+    "Heuristics",
+    "Integrations",
+    "Low Level",
+    "Multi-chain/Cross-chain",
+    "Signature",
+    "Timelock",
+    "Token",
+    "Version Issues"
+  ],
+  "categories": [
+    {
+      "name": "Denial-Of-Service (DoS) Attack",
+      "slug": "denial-of-service",
+      "items": [
+        {
+          "title": "Is the withdrawal pattern followed to prevent denial of service?",
+          "description": "To prevent denial of service attacks during withdrawals, it's critical to follow the withdrawal pattern best practices - pull based approach.",
+          "remediation": "Implement withdrawal pattern best practices to ensure that contract behavior remains predictable and robust against denial of service attacks.",
+          "references": [
+            "#1"
+          ]
+        },
+        {
+          "title": "Is there a minimum transaction amount enforced?",
+          "description": "Enforcing a minimum transaction amount can prevent attackers from clogging the network with zero amount or dust transactions.",
+          "remediation": "Disallow transactions below a certain threshold to maintain efficiency and prevent denial of service through dust spamming.",
+          "references": [
+            "#1",
+            "#2"
+          ]
+        },
+        {
+          "title": "How does the protocol handle tokens with blacklisting functionality?",
+          "description": "Tokens with blacklisting capabilities, such as USDC, can pose unique risks and challenges to protocols.",
+          "remediation": "Account for the possibility of blacklisting within token protocols to ensure continued functionality even if certain addresses are blacklisted.",
+          "references": [
+            "#1"
+          ]
+        },
+        {
+          "title": "Can forcing the protocol to process a queue lead to DOS?",
+          "description": "Forcing protocols to process queues, like a queue of dust withdrawals, can be exploited to cause a denial of service.",
+          "remediation": "Design queue processing in a manner that is resilient to spam and cannot be exploited to cause denial of service.",
+          "references": [
+            "#1",
+            "#2"
+          ]
+        },
+        {
+          "title": "What happens with low decimal tokens that might cause DOS?",
+          "description": "Tokens with low decimals can present issues where the transaction process fails due to rounding to zero amounts.",
+          "remediation": "Implement logic to handle low decimal tokens in a way that prevents the transaction process from breaking due to insufficient token amounts.",
+          "references": [
+            "#1"
+          ]
+        },
+        {
+          "title": "Does the protocol handle external contract interactions safely?",
+          "description": "Protocols must handle interactions with external contracts in a way that does not compromise their functionality if external dependencies fail.",
+          "remediation": "Ensure robust handling of external contract interactions to maintain protocol integrity regardless of external contract performance.",
+          "references": [
+            "#1"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Donation Attack",
+      "slug": "donation-attack",
+      "items": [
+        {
+          "title": "Does the protocol rely on `balance` or `balanceOf` instead of internal accounting?",
+          "description": "Attackers can manipulate the accounting by donating tokens.",
+          "remediation": "Implement internal accounting instead of relying on `balanceOf` natively.",
+          "references": [
+            "#1"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Front-running Attack",
+      "slug": "front-running",
+      "items": [
+        {
+          "title": "Are \"get-or-create\" patterns protected against front-running attacks?",
+          "description": "Functions combining resource creation and interaction (like getOrCreateAndUse) are vulnerable to front-running attacks where attackers can create the resource with different parameters before the victim, potentially manipulating prices or conditions.",
+          "remediation": "Separate creation and interaction into distinct transactions or implement robust protections (parameter validation, relative references instead of absolute values) to ensure safe operation regardless of creation timing.",
+          "references": [
+            "#1",
+            "#2"
+          ]
+        },
+        {
+          "title": "Are two-transaction actions designed to be safe from frontrunning?",
+          "description": "Actions that require two separate transactions may be at risk of frontrunning, where an attacker can intervene between the two calls.",
+          "remediation": "Ensure critical actions that are split across multiple transactions cannot be interfered with by attackers. This can involve checks or locks between the transactions.",
+          "references": [
+            "#1"
+          ]
+        },
+        {
+          "title": "Can users maliciously cause others' transactions to revert by preempting with dust?",
+          "description": "Attackers may cause legitimate transactions to fail by front-running with transactions of negligible amounts.",
+          "remediation": "Implement checks to prevent transactions with non-material amounts from affecting the contract's state or execution flow.",
+          "references": [
+            "#1"
+          ]
+        },
+        {
+          "title": "Is the protocol using a properly user-bound commit-reveal scheme?",
+          "description": "Sensitive on-chain actions can be exposed in the mempool, enabling frontrunning and information exploitation. Effective commit-reveal schemes must bind commitments to specific users and transactions.",
+          "remediation": "Implement a two-phase process where users first commit a hash containing their address and all transaction parameters, then reveal actual actions after the commitment phase ends, preventing frontrunning and information leakage.",
+          "references": [
+            "#1",
+            "#2"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Griefing Attack",
+      "slug": "griefing",
+      "items": [
+        {
+          "title": "Is there an external function that relies on states that can be changed by others?",
+          "description": "Malicious actors can prevent regular user transactions by making a slight change to the on-chain states.",
+          "remediation": "Ensure normal user actions especially important actions like withdrawal and repayment are not disturbed by other actors.",
+          "references": [
+            "#1",
+            "#2",
+            "#3"
+          ]
+        },
+        {
+          "title": "Can the contract operations be manipulated with precise gas limit specifications?",
+          "description": "Attackers can supply carefully calculated gas amounts to force specific execution paths in the contract, manipulating its behavior in unexpected ways.",
+          "remediation": "Implement explicit gas checks before critical operations.",
+          "references": [
+            "#1",
+            "#2",
+            "#3"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Miner Attack",
+      "slug": "miner-attack",
+      "items": [
+        {
+          "title": "Is block.timestamp used for time-sensitive operations?",
+          "description": "Miners can manipulate block.timestamp by several seconds, potentially affecting time-dependent contract logic.",
+          "remediation": "Use block.number instead of timestamps for critical timing operations or ensure manipulation tolerance is acceptable.",
+          "references": []
+        },
+        {
+          "title": "Is the contract using block properties like timestamp or difficulty for randomness generation?",
+          "description": "Block properties (timestamp, difficulty) and other predictable values should not be used for randomness as they can be influenced or predicted by miners.",
+          "remediation": "Use a secure randomness source like Chainlink VRF, commit-reveal schemes, or a provably fair randomization mechanism instead.",
+          "references": [
+            "#1"
+          ]
+        },
+        {
+          "title": "Is contract logic sensitive to transaction ordering?",
+          "description": "Miners control transaction ordering and can exploit this for front-running, back-running, or sandwich attacks.",
+          "remediation": "Implement protection by allowing users to specify acceptable results that revert transactions when breached.",
+          "references": [
+            "#1"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Price Manipulation Attack",
+      "slug": "price-manipulation",
+      "items": [
+        {
+          "title": "Is the price calculated by the ratio of token balances?",
+          "description": "Price can be manipulated via flash loans or donations if it is derived from the ratio of token balances.",
+          "remediation": "Use the Chainlink oracles for the asset prices.",
+          "references": [
+            "#1",
+            "#2",
+            "#3"
+          ]
+        },
+        {
+          "title": "Is the price calculated from DEX liquidity pool spot prices?",
+          "description": "Spot price readings derived directly from DEX liquidity pools are vulnerable to manipulation through flash loans that can temporarily drain the pools.",
+          "remediation": "Use TWAP (time-weighted average price) with appropriate time windows based on asset volatility and liquidity, or use reliable oracle solutions.",
+          "references": [
+            "#1",
+            "#2"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Reentrancy Attack",
+      "slug": "reentrancy",
+      "items": [
+        {
+          "title": "Is there any state change after interaction with an external contract?",
+          "description": "Untrusted external contract calls could callback leading to unexpected results such as multiple withdrawals or out-of-order events.",
+          "remediation": "Use check-effects-interactions pattern or reentrancy guards.",
+          "references": [
+            "#1",
+            "#2",
+            "#3"
+          ]
+        },
+        {
+          "title": "Is there a view function that can return a stale value during interactions?",
+          "description": "Read-only reentrancy occurs when a view function, called during a reentrant execution, returns inaccurate data because the contract's state is temporarily inconsistent due to an ongoing external call, potentially misleading dependent protocols.",
+          "remediation": "Apply the Check-Effects-Interactions pattern to prevent inconsistent state, and ensure the reentrancy guard state is not ENTERED for critical view functions to prevent returning stale data.",
+          "references": [
+            "#1",
+            "#2",
+            "#3"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Replay Attack",
+      "slug": "replay",
+      "items": [
+        {
+          "title": "Are there protections against replay attacks for failed transactions?",
+          "description": "Failed transactions can be susceptible to replay attacks if not properly protected.",
+          "remediation": "Implement nonce-based or other mechanisms to ensure that each transaction can only be executed once, preventing replay attacks, even if the transaction initially failed.",
+          "references": [
+            "#1"
+          ]
+        },
+        {
+          "title": "Is there protection against replaying signatures on different chains?",
+          "description": "Signatures that are valid on one blockchain may be replayed on another, leading to potential security breaches.",
+          "remediation": "Use chain-specific parameters, such as `block.chainid`, or domain separators as defined in EIP-712 to ensure signatures are only valid on the intended chain.",
+          "references": [
+            "#1"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Rug Pull",
+      "slug": "rug-pull",
+      "items": [
+        {
+          "title": "Can the admin of the protocol pull assets from the protocol?",
+          "description": "Some protocols grant an admin with a privilege of pulling assets directly from the protocol. In general, if there is an actor that can affect the user funds directly it must be reported.",
+          "remediation": "Allow access to only the relevant parts of protocol funds, e.g. by tracking fees internally. Forcing a timelock on the admin actions can be another mitigation.",
+          "references": [
+            "#1"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Sandwich Attack",
+      "slug": "sandwich",
+      "items": [
+        {
+          "title": "Does the protocol have an explicit slippage protection on user interactions?",
+          "description": "An attacker can monitor the mempool and puts two transactions before and after the user's transaction. For example, when an attacker spots a large trade, executes their own trade first to manipulate the price, and then profits by closing their position after the user's trade is executed.",
+          "remediation": "Allow users to specify the minimum output amount and revert the transaction if it is not satisfied.",
+          "references": [
+            "#1",
+            "#2"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Sybil Attack",
+      "slug": "sybil",
+      "items": [
+        {
+          "title": "Is there a mechanism depending on the number of users?",
+          "description": "It is very easy to trigger actions using a lot of alternative addresses on blockchain. Any quorum mechanism or utilization based rewarding system can be vulnerable to sybil attacks.",
+          "remediation": "Do not rely on the number of users in quorum design.",
+          "references": [
+            "#1",
+            "#2",
+            "#3"
+          ]
+        }
+      ]
+    }
+  ]
+}
