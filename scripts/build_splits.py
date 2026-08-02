@@ -30,6 +30,7 @@ import hashlib
 import json
 import os
 import random
+import re
 from collections import Counter, defaultdict
 
 if "__file__" in globals() and os.path.isfile(__file__):
@@ -186,6 +187,36 @@ def main():
     eval_, n_ev = join_c4(eval_, c4_by_id)
     print(f"[3] c4 source join: train {n_tr} rows, eval {n_ev} rows filled")
 
+    # 3b) Sherlock source join — fills rows whose source is still empty ------
+    n_sh_tr = n_sh_ev = 0
+    sh_path = os.path.join(ROOT, "splits", "sherlock_joined.jsonl")
+    if os.path.exists(sh_path):
+        sh_map = {r["protocol"]: r["source"] for r in cat_jsonl(sh_path)}
+        for r in train:
+            if not r.get("source") and r["protocol"] in sh_map:
+                r["source"] = sh_map[r["protocol"]]
+                n_sh_tr += 1
+        for r in eval_:
+            if not r.get("source") and r["protocol"] in sh_map:
+                r["source"] = sh_map[r["protocol"]]
+                n_sh_ev += 1
+        print(f"[3b] sherlock source join: train {n_sh_tr} rows, eval {n_sh_ev} rows filled")
+    else:
+        print("[3b] sherlock_joined.jsonl not found — skipping sherlock join")
+
+    # 3c) leak suppression (defensive): identical code must never appear in BOTH splits
+    #     (forked repos / cross-protocol shares). If it does, clear the eval-side source.
+    def _h(s):
+        return hashlib.sha256((s or "").encode()).hexdigest()
+    train_hashes = {_h(r.get("source")) for r in train if r.get("source")}
+    suppressed = 0
+    for r in eval_:
+        if r.get("source") and _h(r["source"]) in train_hashes:
+            r["source"] = ""
+            suppressed += 1
+    if suppressed:
+        print(f"[3c] leak suppression: cleared {suppressed} eval-side sources colliding with train")
+
     # 4) leakage proof ------------------------------------------------------
     leak = leakage_report(train, eval_)
     print(f"[4] leakage: {leak}")
@@ -200,10 +231,21 @@ def main():
         print(f"[5] json.dumps sort_keys auto-detected = {sort_keys}")
 
     os.makedirs(args.out, exist_ok=True)
+    # byte-split BOTH outputs (GitHub hard cap: 100 MB per file)
     tr_payload, tr_parts = write_jsonl_parts(train, os.path.join(args.out, "train_source.jsonl"), sort_keys)
-    ev_payload = write_jsonl(eval_, os.path.join(args.out, "eval_source.jsonl"), sort_keys)
+    ev_payload, ev_parts = write_jsonl_parts(eval_, os.path.join(args.out, "eval_source.jsonl"), sort_keys)
+    # remove stale single-file / superseded part files
+    for base, n_parts in (("train_source.jsonl", tr_parts), ("eval_source.jsonl", ev_parts)):
+        single = os.path.join(args.out, base)
+        if os.path.isfile(single):
+            os.remove(single)
+        for f in sorted(glob.glob(single + ".*")):
+            m = re.search(r"\.part(\d{2})$", f)
+            if m and int(m.group(1)) >= n_parts:
+                os.remove(f)
     print(f"[5] wrote {args.out}/train_source.jsonl.part00..{tr_parts - 1:02d} "
-          f"({len(tr_payload) / 1e6:.1f} MB) + eval_source.jsonl ({len(ev_payload) / 1e6:.1f} MB)")
+          f"({len(tr_payload) / 1e6:.1f} MB) + eval_source.jsonl.part00..{ev_parts - 1:02d} "
+          f"({len(ev_payload) / 1e6:.1f} MB)")
 
     # 6) report -------------------------------------------------------------
     eval_prot_sample = sorted({r["protocol"] for r in eval_})[:15]
@@ -222,6 +264,8 @@ def main():
         "train_severity": severity_counter(train),
         "eval_severity": severity_counter(eval_),
         "c4_source_joined": {"train": n_tr, "eval": n_ev},
+        "sherlock_source_joined": {"train": n_sh_tr, "eval": n_sh_ev},
+        "leakage_suppressed_eval": suppressed,
         "leakage": leak,
         "eval_protocols_sample": eval_prot_sample,
         "sha256": {

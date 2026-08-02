@@ -18,8 +18,10 @@ corpus/
 splits/
   train.jsonl.partNN        46,633 training findings (2,545 protocols) — protocol-exclusive
   eval.jsonl                5,190 eval findings (405 protocols, code-rich) — NEVER in train
-  train_source.jsonl.part   46,633 rows with real contract source attached (7,340 filled)
-  eval_source.jsonl         5,190 rows (655 with source)
+  train_source.jsonl.part   46,633 rows with real contract source attached (9,126 filled)
+  eval_source.jsonl.part   5,190 rows (1,356 with source) — byte-split into parts
+  sherlock_joined.jsonl     Sherlock contest sources by protocol (147 protocols, 2,487 findings)
+  sherlock_join_report.json match report + unmatched protocols
   c4_joined.jsonl.partNN    all 12,460 Code4rena findings (8,003 = 64.2% with real source)
   c4_joined_demo.jsonl      demo subset used to validate the joiner
   split_report.json         split stats + leakage proof
@@ -64,8 +66,8 @@ cat archives/solodit_ALL.zip.part* > archives/solodit_ALL.zip
 15374b70fe309e445ab1c7f84b3a7dab5752b6b1fcdf96e7e9d8647e7f289ed9  train_starter.jsonl
 5d59803902e085a4803b1ccd2c2573a47fa55afe3c975015fa9f0aa1367bed10  split/train.jsonl
 54660299dcff2291722df1a7ff0d7b66f5b86b9f72856b9707fca5efd75728bb  split/eval.jsonl
-a8fea891370879fa143ba15e4a12ff586fa51069318dd4d9ad31ad03e999012e  split/train_source.jsonl
-312c14932754a9e56c0755d9196b1b4289fd8ca740eb147c18bad19deb8e6b40  split/eval_source.jsonl
+48a4f42cd060069bf4e2da487e0bf664c5b66f3e9e48ef65bb6538c6b347954a  split/train_source.jsonl
+5dfaadaa19eb1db1f6023c1268563e0b4e496e935e33b849c8ea455cfbe6f5fc  split/eval_source.jsonl
 17023740303ba44fbb3c627548c08c5c11f9f904a367ff1306bd08dfe4c1f24f  split/c4_joined.jsonl
 975d83edf14b8b725b56e4b7f6b109a5f0cf7666fb643f0c4ac6cd5f1905d918  split/split_report.json
 3bd850376df5c273332c4889609cabf644e3e9f4c8886522117ea42f4c727e84  split/kaggle_ready_report.json
@@ -120,13 +122,18 @@ The pipeline consumes the [Cyfrin Solodit audit checklist](https://solodit.cyfri
 2. **Dedupe by `audit_text`** (keep first) → 51,823 records — exactly the published `after_dedup`.
 3. **Split (protocol-exclusive)** — default mode VERIFIES the shipped canonical partition
    (`splits/train.jsonl.part*` + `splits/eval.jsonl`: id-set equality with the deduped corpus,
-   counts 46,633/5,190, protocols 2,545/405) and reuses it, so the emitted files are
-   **byte-identical** to the shipped ones (validated: sha256 `a8fea891…` / `312c1493…`,
-   4-part layout identical). `--rebuild-split` builds a fresh deterministic split instead.
+   counts 46,633/5,190, protocols 2,545/405) and reuses it. `--rebuild-split` builds a fresh
+   deterministic split instead.
 4. **Code4rena source join** — fills `source` + `c4_repo` from `splits/c4_joined.jsonl.part*` by
-   `id` (8,003 rows carry real audited contract code → train 7,340 / eval 655 filled; nothing
-   else is overwritten).
-5. **Leakage proof** (asserted + written to `splits/split_report.json`): id overlap 0,
-   protocol overlap 0, (contract_name, protocol) overlap 0, source-content (sha256) overlap 0.
+   `id` (8,003 rows carry real audited contract code → train 7,340 / eval 655 filled).
+5. **Sherlock source join** — `scripts/join_sherlock.py` matches the `sherlock-audit` GitHub org
+   (one repo → best-matching protocol; judging archives excluded) and fills the remaining empty
+   `source` fields from `splits/sherlock_joined.jsonl` (2,487 more rows: train 1,786 / eval 701).
+   Unmatched protocols are listed in `splits/sherlock_join_report.json`.
+6. **Leakage proof** (asserted + written to `splits/split_report.json`): id overlap 0,
+   protocol overlap 0, (contract_name, protocol) overlap 0, source-content (sha256) overlap 0
+   (eval-side duplicates are suppressed automatically).
+
+Current outputs: `train_source.jsonl` sha256 `48a4f42c…` (6 parts), `eval_source.jsonl` sha256 `5dfaadaa…` (2 parts).
 
 Usage: `python3 scripts/build_splits.py [--rebuild-split] [--out DIR]`

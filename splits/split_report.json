@@ -2,6 +2,8 @@
   "corpus_total": 52697,
   "after_dedup": 51823,
   "dedup_removed": 874,
+  "dedup_key": "audit_text (keep first)",
+  "split_mode": "canonical-verified",
   "train_count": 46633,
   "eval_count": 5190,
   "eval_ratio": 0.1001,
@@ -25,25 +27,41 @@
     "MEDIUM": 1840,
     "GAS": 209
   },
+  "c4_source_joined": {
+    "train": 7340,
+    "eval": 655
+  },
+  "sherlock_source_joined": {
+    "train": 1786,
+    "eval": 701
+  },
+  "leakage_suppressed_eval": 0,
   "leakage": {
     "id_overlap": 0,
-    "protocol_overlap": 0
+    "protocol_overlap": 0,
+    "contract_protocol_overlap": 0,
+    "source_hash_overlap": 0
   },
   "eval_protocols_sample": [
-    "Phi",
-    "Pearlabs",
-    "Etherspot Credibleaccountmodule",
-    "BOB-Staking_2025-10-18",
-    "Stackingsalmon",
-    "Basis",
-    "Etherspot Gastankpaymastermodule Extended",
-    "Term Structure",
-    "Exactly Protocol",
-    "Futaba",
-    "Perennial V2 Update #1",
-    "Fenix Finance",
-    "Blueberry_2025-03-12",
-    "Perpetual",
-    "Exactly Protocol Update - Stacking Contract"
-  ]
+    "0x Protocol",
+    "3DNS Inc",
+    "Aave V4",
+    "Aave_2025-11-29",
+    "Abacus",
+    "Abster Freefall",
+    "Aburra",
+    "Acronym Foundation",
+    "Aegis.im YUSD",
+    "AgoraAccessControl_2025-06-05",
+    "Ajna",
+    "Ajna #2",
+    "Ajna Update",
+    "AladdinDAO f(x) Protocol",
+    "Alchemix - Optimism Bridging and Reward Routing"
+  ],
+  "sha256": {
+    "train_source.jsonl": "48a4f42cd060069bf4e2da487e0bf664c5b66f3e9e48ef65bb6538c6b347954a",
+    "eval_source.jsonl": "5dfaadaa19eb1db1f6023c1268563e0b4e496e935e33b849c8ea455cfbe6f5fc"
+  },
+  "json_sort_keys": false
 }
